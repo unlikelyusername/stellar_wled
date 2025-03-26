@@ -1,3 +1,4 @@
+
 from stellar import StellarUnicorn
 from picographics import PicoGraphics, DISPLAY_STELLAR_UNICORN
 import network
@@ -44,6 +45,41 @@ def check_buttons():
             update_brightness()
             print("Brightness:", brightness_level)
             time.sleep(0.2)
+    if unicorn.is_pressed(StellarUnicorn.SWITCH_A):
+        show_ip_address()
+        time.sleep(0.5)  # debounce
+
+
+def show_ip_address(duration=10):
+    # Get IP from network interface
+    wlan = network.WLAN(network.STA_IF)
+    if wlan.isconnected():
+        ip = wlan.ifconfig()[0]
+    else:
+        ip = "No Wi-Fi"
+
+    # Set up font
+    graphics.set_font("bitmap6")
+    text_width = graphics.measure_text(ip, 1)  # scale 1
+
+    # Scroll loop
+    start_time = time.time()
+    scroll_x = 16  # start just off screen to the right
+
+    while time.time() - start_time < duration:
+        graphics.set_pen(graphics.create_pen(0, 0, 0))  # black background
+        graphics.clear()
+
+        graphics.set_pen(graphics.create_pen(255, 255, 255))  # white text
+        graphics.text(ip, scroll_x, 4, scale=1)
+
+        unicorn.update(graphics)
+        scroll_x -= 1
+        if scroll_x < -text_width:
+            scroll_x = 16  # restart scroll if it finishes early
+
+        time.sleep(0.075)
+
 
 # === Connect Wi-Fi ===
 def connect_wifi():
@@ -55,6 +91,8 @@ def connect_wifi():
             time.sleep(0.2)
     print("Connected to Wi-Fi:", wlan.ifconfig())
     return wlan
+
+
 
 # === Display Frame ===
 def show_frame(data):
@@ -116,4 +154,3 @@ def run_ddp_receiver():
         time.sleep(0.01)
 
 run_ddp_receiver()
-
